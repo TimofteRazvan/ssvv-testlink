@@ -3,6 +3,9 @@ package org.example;
 import domain.Nota;
 import domain.Student;
 import domain.Tema;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import repository.NotaXMLRepo;
 import repository.StudentXMLRepo;
 import repository.TemaXMLRepo;
@@ -10,155 +13,91 @@ import service.Service;
 import validation.NotaValidator;
 import validation.StudentValidator;
 import validation.TemaValidator;
-import validation.ValidationException;
-import org.junit.jupiter.api.*;
-import org.mockito.Mock;
 
 import java.time.LocalDate;
 
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class TestIntegration {
-    @Mock
-    private StudentValidator studentValidator;
+public class TestIntegration
+{
+    public static Service service;
 
-    @Mock
-    private TemaValidator temaValidator;
+    @BeforeAll
+    public static void setup() {
+        StudentValidator studentValidator = new StudentValidator();
+        TemaValidator temaValidator = new TemaValidator();
+        String filenameStudent = "fisiere/Studenti.xml";
+        String filenameTema = "fisiere/Teme.xml";
+        String filenameNota = "fisiere/Note.xml";
 
-    @Mock
-    private NotaValidator notaValidator;
+        StudentXMLRepo studentXMLRepository = new StudentXMLRepo(filenameStudent);
+        TemaXMLRepo temaXMLRepository = new TemaXMLRepo(filenameTema);
+        NotaValidator notaValidator = new NotaValidator(studentXMLRepository, temaXMLRepository);
+        NotaXMLRepo notaXMLRepository = new NotaXMLRepo(filenameNota);
+        TestIntegration.service = new Service(studentXMLRepository, studentValidator, temaXMLRepository, temaValidator, notaXMLRepository, notaValidator);
+    }
 
-    @Mock
-    private StudentXMLRepo studentXMLRepository;
+    @Test
+    public void test1_addStudent_ValidData_Success()
+    {
+        Student testStudent = new Student("test_id", "Test Student", 937, "test_email@stud.ubbcluj.ro");
+        try {
+            service.addStudent(testStudent);
+            assertTrue( true );
+        } catch (Exception e){
+            System.out.println(e);
+            fail();
+        }
+    }
 
-    @Mock
-    private TemaXMLRepo temaXMLRepository;
+    @Test
+    public void test2_addTema_ValidData_Success() {
+        Tema tema = new Tema("101", "test", 12, 1);
+        try {
+            service.addTema(tema);
+            assertTrue( true );
+        } catch (Exception e){
+            System.out.println(e);
+            fail();
+        }
+    }
 
-    @Mock
-    private NotaXMLRepo notaXMLRepository;
+    @Test
+    public void test3_addNota_ValidData_Success() {
+        String notaId = "nt1";
+        double notaVal = 9.5;
 
-    private Service service;
+        Nota nota = new Nota(notaId, "1", "1", notaVal, LocalDate.now());
+        try {
+            service.addNota(nota, "feedback");
+            assertTrue( true );
+        } catch (Exception e){
+            System.out.println(e);
+            fail();
+        }
+    }
 
-    @BeforeEach
-    public void setup() {
-        studentValidator = mock(StudentValidator.class);
-        temaValidator = mock(TemaValidator.class);
-        notaValidator = mock(NotaValidator.class);
-        studentXMLRepository = mock(StudentXMLRepo.class);
-        temaXMLRepository = mock(TemaXMLRepo.class);
-        notaXMLRepository = mock(NotaXMLRepo.class);
-        service = new Service(studentXMLRepository, studentValidator, temaXMLRepository, temaValidator, notaXMLRepository, notaValidator);
+    @Test
+    public void test4_fullIntegration_Success(){
+        Student testStudent = new Student("test_id1", "Test Student", 937, "test_email@stud.ubbcluj.ro");
+        service.addStudent(testStudent);
+
+        Tema tema = new Tema("1057", "test", 2, 1);
+        service.addTema(tema);
+
+        assert(service.findTema("1057") != null);
+        Nota nota = new Nota("101","test_id1","1057",9.3, LocalDate.now());
+        service.addNota(nota,"feedback");
+
+        Nota nota1 = service.findNota("101");
+        assert(nota1.equals(nota));
     }
 
     @AfterEach
-    public void tearDown() {
-        studentValidator = null;
-        temaValidator = null;
-        notaValidator = null;
-        studentXMLRepository = null;
-        temaXMLRepository = null;
-        notaXMLRepository = null;
-        service = null;
-    }
-
-    @Test
-    public void addStudent_InvalidNume_ThrowsException() {
-        String studentId = "1";
-        String nume = "";
-        int grupa = 931;
-        String email = "miguel@yahoo.com";
-
-        Student student = new Student(studentId, nume, grupa, email);
-
-        try {
-            doThrow(new ValidationException("Nume incorect!")).when(studentValidator).validate(student);
-            Assertions.assertThrows(ValidationException.class, () -> {
-                service.addStudent(student);
-            });
-        } catch (ValidationException ve) {
-            ve.printStackTrace();
-        }
-    }
-
-    @Test
-    public void addTema_InvalidDeadline_ThrowsException() {
-        String nrTema = "1";
-        String descriere = "descriere";
-        int deadline = 20;
-        int primire = 2;
-
-        Tema tema = new Tema(nrTema, descriere, deadline, primire);
-        try {
-            doThrow(new ValidationException("Deadlineul trebuie sa fie intre 1-14.")).when(temaValidator).validate(tema);
-            Assertions.assertThrows(ValidationException.class, () -> {
-                service.addTema(tema);
-            });
-        } catch (ValidationException ve) {
-            ve.printStackTrace();
-        }
-    }
-
-    @Test
-    public void addNota_InvalidStudent_InvalidTema_ThrowsException() {
-        String notaId = "nt1";
-        double notaVal = 9.5;
-        LocalDate date = LocalDate.of(2023, 4, 25);
-        Nota nota = new Nota(notaId, "0", "0", notaVal, date);
-        try {
-            //Nota returnedNota = service.addNota(nota, "feedback");
-            Assertions.assertThrows(NullPointerException.class, () -> {
-                service.addNota(nota, "feedback");
-            });
-            //Assertions.assertNull(returnedNota);
-            //Assertions.assertEquals(9.5, nota.getNota());
-        } catch (Exception ve) {
-            ve.printStackTrace();
-        }
-    }
-
-    @Test
-    public void addStudent_Valid_addTema_Valid_addNota_InvalidDate_ThrowsException() {
-        String studentId = "1";
-        String nume = "Miguel";
-        int grupa = 931;
-        String email = "miguel@yahoo.com";
-        Student student = new Student(studentId, nume, grupa, email);
-
-        String nrTema = "1";
-        String descriere = "descriere";
-        int deadline = 12;
-        int primire = 2;
-        Tema tema = new Tema(nrTema, descriere, deadline, primire);
-
-        String notaId = "nt1";
-        double notaVal = 9.5;
-        LocalDate date = LocalDate.of(2024, 4, 15);
-        Nota nota = new Nota(notaId, studentId, nrTema, notaVal, date);
-
-        try {
-            doNothing().when(studentValidator).validate(student);
-            when(studentXMLRepository.save(student)).thenReturn(null);
-
-            doNothing().when(temaValidator).validate(tema);
-            when(temaXMLRepository.save(tema)).thenReturn(null);
-
-            when(studentXMLRepository.findOne(studentId)).thenReturn(student);
-            when(temaXMLRepository.findOne(nrTema)).thenReturn(tema);
-
-            Student returnedStudent = service.addStudent(student);
-            Assertions.assertNull(returnedStudent);
-
-            Tema returnedTema = service.addTema(tema);
-            Assertions.assertNull(returnedTema);
-
-            Assertions.assertThrows(ValidationException.class, () -> {
-                service.addNota(nota, "feedback");
-            });
-            //Nota returnedNota = service.addNota(nota, "feedback");
-            //Assertions.assertNull(returnedNota);
-            //Assertions.assertEquals(9.5, nota.getNota());
-        } catch (Exception ve) {
-            ve.printStackTrace();
-        }
+    public void cleanup(){
+        service.deleteStudent("test_id1");
+        service.deleteTema("1057");
+        service.deleteNota("1#1");
+        service.deleteNota("test_id1#1057");
     }
 }
