@@ -97,7 +97,7 @@ public class TestIntegration
     public void cleanup(){
         service.deleteStudent("test_id1");
         service.deleteTema("1057");
-        service.deleteNota("1#1");
-        service.deleteNota("test_id1#1057");
+        service.deleteNota("nt1");
+        service.deleteNota("101");
     }
 }
