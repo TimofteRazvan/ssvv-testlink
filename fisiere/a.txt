@@ -178,3 +178,21 @@ Nota: 7.0
 Predata in saptamana: 3
 Deadline: 2
 Feedback: feedback
+
+Tema: 1
+Nota: 9.5
+Predata in saptamana: 1
+Deadline: 2
+Feedback: feedback
+
+Tema: 1
+Nota: 9.5
+Predata in saptamana: 1
+Deadline: 2
+Feedback: feedback
+
+Tema: 1
+Nota: 9.5
+Predata in saptamana: 1
+Deadline: 2
+Feedback: feedback

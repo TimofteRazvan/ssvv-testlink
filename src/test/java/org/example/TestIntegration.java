@@ -4,6 +4,7 @@ import domain.Nota;
 import domain.Student;
 import domain.Tema;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import repository.NotaXMLRepo;
@@ -13,6 +14,7 @@ import service.Service;
 import validation.NotaValidator;
 import validation.StudentValidator;
 import validation.TemaValidator;
+import validation.ValidationException;
 
 import java.time.LocalDate;
 
@@ -93,11 +95,28 @@ public class TestIntegration
         assert(nota1.equals(nota));
     }
 
+    @Test
+    public void test5_addStudent_ValidData_addAssignment_InvalidDeadline_ThrowsException() {
+        Student student = new Student("194", "test_student", 937, "test@test.com");
+        Tema tema = new Tema("195", "desc", 20, 2);
+        try {
+            Student returnedStudent = service.addStudent(student);
+            Assertions.assertNull(returnedStudent);
+            Assertions.assertThrows(ValidationException.class, () -> {
+                service.addTema(tema);
+            });
+        } catch (ValidationException ve) {
+            ve.printStackTrace();
+        }
+    }
+
     @AfterEach
     public void cleanup(){
         service.deleteStudent("test_id1");
         service.deleteTema("1057");
         service.deleteNota("nt1");
         service.deleteNota("101");
+        service.deleteStudent("194");
+        service.deleteTema("195");
     }
 }
